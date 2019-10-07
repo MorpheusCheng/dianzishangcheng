@@ -24,3 +24,45 @@ dao层很简单，就是根据目标数据库的调用方式，抽象出某个�
 完成一个标准的电商流程。商品详情、加购、下单、支付、发货、收货确认完成。
 
 核心模型： 商品
+class Item{ private Long id; private String name; private Map<String,String> feature; }
+购物车
+class Cart{ private Long id; private List<Pair<Long,Integer>> items; private Map<String,String> feature; }
+交易单
+class Trade{ private Long id; private List<Pair<Long,Integer>> items; private PayStatus payStatus; private TradeStatus tradeStatus; private DeliverStatus deliverStatus; private Map<String,String> feature; }
+枚举类
+public enum PayStatus{ CREATED,PAY_SUCCESS,PAY_FAIL }
+public enum TradeStatus{ CREATED,PAYING,PAY_SUCCESS,PAY_FAIL,DELIVERING,DONE }
+public enum DeliverStatus{ DELIVERING,DELIVER_SUCCESS }
+
+需求：
+默认下单流程： 
+1. 看商品，有缓存就看缓存的，没缓存就从数据库捞。 
+2. 加购，需要添加到数据库中。 
+3. 创建交易单，需要创建交易单，交易单状态为CREATED。 
+4. 创建支付单，创建支付单。交易单状态变为支付中。 
+5. 支付，交易单的支付状态变为支付成功/失败。交易单状态变为支付成功/失败。 
+6. 发货，交易单的发货状态变为快递中，交易单的状态变为快递中。 
+7. 收货，交易单的发货状态变为快递成功，交易单的状态变为完结。
+
+钢铁侠流程： 
+1. 看商品，有缓存就看缓存的，没缓存就从数据库捞、如果商品中不包含 ENABLE=true 的feature，说明为内部商品，禁止查看。。 
+2. 加购，需要添加到数据库中。 
+3. 创建交易单，需要创建交易单，交易单状态为CREATED。如果当前时间的秒数不为5，则禁止创建交易单。 
+4. 创建支付单，创建支付单。交易单状态变为支付中。如果单笔支付单超过50000万元，则不允许创建支付单。 
+5. 支付，交易单的支付状态变为支付成功/失败。交易单状态变为支付成功/失败，需要调用 iromMan 公司的支付服务。 
+6. 发货，交易单的发货状态变为快递中，交易单的状态变为快递中。 
+7. 完结，交易单的发货状态变为快递成功，交易单的状态变为完结。
+
+SPACEX流程:
+ 1. 看商品，有缓存就看缓存的，没缓存就从数据库捞、如果商品中不包含 DISABLE=true 的feature，说明为外部商品，都允许查看。。 
+ 2. 加购，需要添加到数据库中。 
+ 3. 创建交易单，需要创建交易单，交易单状态为CREATED。如果当前时间的秒数的平方个位数不为5，则禁止创建交易单。 
+ 4. 创建支付单，创建支付单。交易单状态变为支付中。如果单笔支付单小于0.5万元，则不允许创建支付单。 
+ 5. 支付，交易单的支付状态变为支付成功/失败。交易单状态变为支付成功/失败，需要调用 SpaceX 公司的支付服务。如果调用 SpaceX 公司支付服务失败，则顺延调用 WePay 公司的支付服务。 
+ 6. 发货，交易单的发货状态变为快递中，交易单的状态变为快递中，每个快递单最大允许5件商品，如果超过则需要拆单。 
+ 7. 完结，交易单的发货状态变为快递成功，交易单的状态变为完结。
+ 
+ 以上所有的更新操作都需要更新缓存，暂时忽略并发的场景。
+ 
+ ### 目标
+ 会用 SpringBoot。 能设计多业务扩展性。 能懂分层的意义。
