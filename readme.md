@@ -24,17 +24,27 @@ dao层很简单，就是根据目标数据库的调用方式，抽象出某个�
 完成一个标准的电商流程。商品详情、加购、下单、支付、发货、收货确认完成。
 
 核心模型： 商品
+
 class Item{ private Long id; private String name; private Map<String,String> feature; }
+
 购物车
+
 class Cart{ private Long id; private List<Pair<Long,Integer>> items; private Map<String,String> feature; }
+
 交易单
+
 class Trade{ private Long id; private List<Pair<Long,Integer>> items; private PayStatus payStatus; private TradeStatus tradeStatus; private DeliverStatus deliverStatus; private Map<String,String> feature; }
+
 枚举类
+
 public enum PayStatus{ CREATED,PAY_SUCCESS,PAY_FAIL }
+
 public enum TradeStatus{ CREATED,PAYING,PAY_SUCCESS,PAY_FAIL,DELIVERING,DONE }
+
 public enum DeliverStatus{ DELIVERING,DELIVER_SUCCESS }
 
 需求：
+
 默认下单流程： 
 1. 看商品，有缓存就看缓存的，没缓存就从数据库捞。 
 2. 加购，需要添加到数据库中。 
