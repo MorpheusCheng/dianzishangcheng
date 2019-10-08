@@ -6,7 +6,7 @@ import com.bdilab.demo.dto.BaseDTO;
 /**
  * Author: cyz
  * Date: 2019/10/7
- * Description:
+ * Description: dao层是直接访问数据库的 对外暴露操作方法接口
  */
 public abstract class BaseDAO {
     public abstract String getIdString(Long id);

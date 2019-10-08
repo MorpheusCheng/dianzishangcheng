@@ -9,7 +9,13 @@ import com.bdilab.demo.dto.TradeDTO;
  * Description:
  */
 public class TradeRequest extends BaseRequest {
+    /**
+     * 购物车
+     */
     private CartDTO cartDTO;
+    /**
+     * 交易单
+     */
     private TradeDTO tradeDTO;
 
     public CartDTO getCartDTO() {

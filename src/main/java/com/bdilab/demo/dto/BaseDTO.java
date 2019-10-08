@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * Author: cyz
  * Date: 2019/10/7
- * Description:
+ * Description: 数据对象层 将数据库中的数据以对象的形式暴露出来 id对应的是组件的id feature对应的是
  */
 public class BaseDTO {
     private Long id;
