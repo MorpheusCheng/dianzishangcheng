@@ -10,5 +10,5 @@ import lombok.Data;
 @Data
 public class ItemDTO extends BaseDTO{
     private String name;
-    private String price;
+    private float price;
 }

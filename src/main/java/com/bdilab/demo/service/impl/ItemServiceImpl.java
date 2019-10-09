@@ -21,26 +21,35 @@ import org.springframework.stereotype.Service;
 public class ItemServiceImpl implements ItemService {
     @Override
     public ResultDTO<Void> viewItem(ViewItemRequest viewItemRequest){
-        if (viewItemRequest.getBizCode() == BizCode.DEAULT){
             return new ResultExcutor<Void>(){
                 @Override
                 public Void run(){
-                    System.out.println("view item");
-                    BaseCache itemCache = new ItemCache();
+                    ItemCache itemCache = new ItemCache();
                     ItemDTO itemDTO = (ItemDTO) itemCache.get(viewItemRequest.getId());
                     if (itemDTO == null){
                         itemDTO = (ItemDTO) new ItemDAO().select(viewItemRequest.getId());
-                        itemCache.put(itemDTO);
                     }
-                    System.out.println("view item " + itemDTO.getId()+" name: " + itemDTO.getName() + " price " + itemDTO.getPrice());
+                    if (itemDTO == null){
+                        System.out.println("数据库中无该item ：" + viewItemRequest.getId());
+                        return null;
+                    }
+                    if (viewItemRequest.getBizCode() == BizCode.DEAULT){
+                        System.out.println("默认模式 view item " + itemDTO.getId() + " name " + itemDTO.getName() + " price " + itemDTO.getPrice());
+                    }else if (viewItemRequest.getBizCode() == BizCode.IRON_MAN){
+                        if ("true".equals(itemDTO.getFeature("ENABLE"))){
+                            System.out.println("钢铁侠模式 view item " + itemDTO.getId() + " name " + itemDTO.getName() + " price " + itemDTO.getPrice());
+                        }else {
+                            System.out.println("钢铁侠模式 禁止查看该item");
+                        }
+                    }else {
+                        if ("true".equals(itemDTO.getFeature("ENABLE"))){
+                            System.out.println("SPACEX模式 禁止查看该item");
+                        }else {
+                            System.out.println("SPACEX 模式 view item " + itemDTO.getId() + " name " + itemDTO.getName() + " price " + itemDTO.getPrice());
+                        }
+                    }
                     return null;
                 }
             }.execute();
-        }else if (viewItemRequest.getBizCode() == BizCode.IRON_MAN){
-
-        }else {
-
-        }
-        return null;
     }
 }
