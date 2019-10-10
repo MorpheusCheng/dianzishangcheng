@@ -3,9 +3,13 @@ package com.bdilab.demo.service.impl;
 import com.bdilab.demo.BizCode;
 import com.bdilab.demo.base.ResultDTO;
 import com.bdilab.demo.base.ResultExcutor;
+import com.bdilab.demo.dao.CartDAO;
 import com.bdilab.demo.dao.ItemDAO;
 import com.bdilab.demo.dao.TradeDAO;
 import com.bdilab.demo.dto.*;
+import com.bdilab.demo.proxy.IronManCompanyProxy;
+import com.bdilab.demo.proxy.SpaceXCompanyProxy;
+import com.bdilab.demo.proxy.WePayCompanyProxy;
 import com.bdilab.demo.request.TradeRequest;
 import com.bdilab.demo.service.TradeService;
 import javafx.util.Pair;
@@ -34,6 +38,8 @@ public class TradeServiceImpl implements TradeService {
                 TradeDAO tradeDAO = new TradeDAO();
                 ItemDAO itemDAO = new ItemDAO();
 
+                tradeDTO = (TradeDTO) tradeDAO.select(tradeDTO.getId());
+
                 Calendar calendar = Calendar.getInstance();
                 int sec = calendar.get(Calendar.SECOND);
 
@@ -48,6 +54,7 @@ public class TradeServiceImpl implements TradeService {
                     tradeDTO.setTradeStatus(TradeStatus.CREATED);
                     System.out.println("默认模式 创建交易单");
                     tradeDTO.setTradeStatus(TradeStatus.PAYING);
+                    tradeDTO.setPayStatus(PayStatus.CREATED);
                     System.out.println("创建支付单");
                     tradeDAO.insertOrUpdate(tradeDTO);
                     return tradeDTO.getId();
@@ -58,6 +65,7 @@ public class TradeServiceImpl implements TradeService {
                     }
                     tradeDTO.setTradeStatus(TradeStatus.CREATED);
                     tradeDTO.setTradeStatus(TradeStatus.PAYING);
+                    tradeDTO.setPayStatus(PayStatus.CREATED);
                     tradeDAO.insertOrUpdate(tradeDTO);
                     System.out.println("钢铁侠模式创建订单");
                     return tradeDTO.getId();
@@ -68,6 +76,7 @@ public class TradeServiceImpl implements TradeService {
                     }
                     tradeDTO.setTradeStatus(TradeStatus.CREATED);
                     tradeDTO.setTradeStatus(TradeStatus.PAYING);
+                    tradeDTO.setPayStatus(PayStatus.CREATED);
                     tradeDAO.insertOrUpdate(tradeDTO);
                     System.out.println("SPACEX模式创建订单");
                     return tradeDTO.getId();
@@ -86,8 +95,30 @@ public class TradeServiceImpl implements TradeService {
         return new ResultExcutor<PayStatus>(){
             @Override
             public PayStatus run(){
+                TradeDTO tradeDTO = tradeRequest.getTradeDTO();
+                TradeDAO tradeDAO = new TradeDAO();
+                tradeDTO = (TradeDTO) tradeDAO.select(tradeDTO.getId());
 
-                return null;
+                if (tradeDTO == null || tradeDTO.getPayStatus() == null){
+                    tradeDTO = new TradeDTO();
+                    tradeDTO.setPayStatus(PayStatus.PAY_FAIL);
+                    System.out.println("支付失败");
+                }else if (tradeRequest.getBizCode() == BizCode.IRON_MAN){
+                    IronManCompanyProxy ironManCompanyProxy = new IronManCompanyProxy();
+                    ironManCompanyProxy.pay();
+                    tradeDTO.setPayStatus(PayStatus.PAY_SUCCESS);
+                }else if (tradeRequest.getBizCode() == BizCode.SPACEX){
+                    SpaceXCompanyProxy spaceXCompanyProxy = new SpaceXCompanyProxy();
+                    try{
+                        spaceXCompanyProxy.pay();
+                    }catch (Exception e){
+                        WePayCompanyProxy wePayCompanyProxy = new WePayCompanyProxy();
+                        wePayCompanyProxy.pay();
+                    }
+                    tradeDTO.setPayStatus(PayStatus.PAY_SUCCESS);
+                }
+                tradeDAO.insertOrUpdate(tradeDTO);
+                return tradeDTO.getPayStatus();
             }
         }.execute();
     }
@@ -101,6 +132,13 @@ public class TradeServiceImpl implements TradeService {
     public ResultDTO<DeliverStatus> deliver(TradeRequest tradeRequest){
         return new ResultExcutor<DeliverStatus>() {
             public DeliverStatus run(){
+                TradeDTO tradeDTO = tradeRequest.getTradeDTO();
+                TradeDAO tradeDAO = new TradeDAO();
+                tradeDTO = (TradeDTO) tradeDAO.select(tradeDTO.getId());
+
+                tradeDTO.setDeliverStatus(DeliverStatus.DELIVERING);
+                tradeDTO.setTradeStatus(TradeStatus.DELIVERING);
+                System.out.println("快递中");
                 return null;
             }
         }.execute();
@@ -115,6 +153,13 @@ public class TradeServiceImpl implements TradeService {
     public ResultDTO<Void> done(TradeRequest tradeRequest){
         return new ResultExcutor<Void>(){
             public Void run(){
+                TradeDTO tradeDTO = tradeRequest.getTradeDTO();
+                TradeDAO tradeDAO = new TradeDAO();
+                tradeDTO = (TradeDTO) tradeDAO.select(tradeDTO.getId());
+
+                tradeDTO.setDeliverStatus(DeliverStatus.DELIVER_SUCCESS);
+                tradeDTO.setTradeStatus(TradeStatus.DONE);
+                System.out.println("完结");
                 return null;
             }
         }.execute();
@@ -132,6 +177,10 @@ public class TradeServiceImpl implements TradeService {
             public TradeDTO run(){
                 TradeDAO tradeDAO = new TradeDAO();
                 TradeDTO tradeDTO = tradeRequest.getTradeDTO();
+                CartDAO cartDAO = new CartDAO();
+                CartDTO cartDTO = (CartDTO) cartDAO.select(tradeRequest.getTradeDTO().getId());
+
+                tradeDTO.setItems(cartDTO.getItems());
                 tradeDAO.insertOrUpdate(tradeDTO);
                 System.out.println("加购交易: id " + tradeDTO.getId());
                 return tradeDTO;

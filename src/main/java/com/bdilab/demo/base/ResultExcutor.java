@@ -16,6 +16,7 @@ public abstract class ResultExcutor<T> {
             T data = run();
             resultDTO.setData(data);
         }catch (Throwable e){
+            e.printStackTrace();
             resultDTO.setSuccess(false);
         }
 
